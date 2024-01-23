@@ -8,7 +8,7 @@
         <version>3.0.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>fr.loumoa</groupId>
+    <groupId>fr.efrei</groupId>
     <artifactId>Authenticator</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Authenticator</name>
