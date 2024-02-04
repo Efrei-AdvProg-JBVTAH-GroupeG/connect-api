@@ -14,7 +14,7 @@ import java.util.Set;
         @UniqueConstraint(columnNames = "username"),
         @UniqueConstraint(columnNames = "email")
 })
-@NoArgsConstructor(force = true)
+@NoArgsConstructor()
 @RequiredArgsConstructor
 @Data
 public class User {
@@ -38,9 +38,10 @@ public class User {
     @NonNull
     private String password;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @NonNull
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
+    private Set<Role> roles;
 }

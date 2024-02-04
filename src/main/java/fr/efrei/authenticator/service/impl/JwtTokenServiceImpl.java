@@ -1,7 +1,7 @@
-package fr.efrei.authenticator.security.jwt;
+package fr.efrei.authenticator.service.impl;
 
-import fr.efrei.authenticator.security.services.UserDetailsImpl;
-import io.jsonwebtoken.security.Keys;
+import fr.efrei.authenticator.security.user.UserDetailsImpl;
+import fr.efrei.authenticator.service.TokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,7 @@ import java.security.KeyPair;
 import java.util.Date;
 
 @Component
-public class JwtUtils {
+public class JwtTokenServiceImpl implements TokenService {
     private final KeyPair keyPair = Jwts.SIG.RS256.keyPair().build();
 
     @Value("${auth.app.jwtExpirationMs}")
@@ -23,7 +23,7 @@ public class JwtUtils {
         return keyPair.getPublic();
     }
 
-    public String generateJwtToken(Authentication authentication) {
+    public String generateToken(Authentication authentication) {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
@@ -38,11 +38,11 @@ public class JwtUtils {
                 .compact();
     }
 
-    public String getUserNameFromJwtToken(String token) {
+    public String findUserNameFromToken(String token) {
         return Jwts.parser().verifyWith(keyPair.getPublic()).build().parseSignedClaims(token).getPayload().getSubject();
     }
 
-    public boolean validateJwtToken(String authToken) {
+    public boolean validateToken(String authToken) {
         try {
             Jwts.parser().verifyWith(keyPair.getPublic()).build().parseSignedClaims(authToken);
             return true;

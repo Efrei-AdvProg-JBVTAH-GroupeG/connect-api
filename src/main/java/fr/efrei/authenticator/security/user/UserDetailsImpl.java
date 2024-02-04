@@ -1,4 +1,4 @@
-package fr.efrei.authenticator.security.services;
+package fr.efrei.authenticator.security.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.efrei.authenticator.model.User;

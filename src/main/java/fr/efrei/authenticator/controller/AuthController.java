@@ -4,16 +4,18 @@ import fr.efrei.authenticator.model.Role;
 import fr.efrei.authenticator.model.User;
 import fr.efrei.authenticator.payload.request.RolesRequest;
 import fr.efrei.authenticator.payload.response.JwtResponse;
-import fr.efrei.authenticator.util.RoleUtil;
+import fr.efrei.authenticator.service.RoleService;
 import fr.efrei.authenticator.payload.request.LoginRequest;
 import fr.efrei.authenticator.payload.request.SignupRequest;
 import fr.efrei.authenticator.payload.response.MessageResponse;
 import fr.efrei.authenticator.payload.response.TokenResponse;
-import fr.efrei.authenticator.repository.RoleRepository;
 import fr.efrei.authenticator.repository.UserRepository;
-import fr.efrei.authenticator.security.jwt.JwtUtils;
-import fr.efrei.authenticator.security.services.UserDetailsImpl;
+import fr.efrei.authenticator.service.TokenService;
+import fr.efrei.authenticator.service.impl.JwtTokenServiceImpl;
+import fr.efrei.authenticator.security.user.UserDetailsImpl;
+import fr.efrei.authenticator.service.impl.RoleServiceImpl;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,31 +35,39 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
+@Slf4j
 public class AuthController {
-    @Autowired
     AuthenticationManager authenticationManager;
 
-    @Autowired
     UserRepository userRepository;
 
-    @Autowired
-    RoleRepository roleRepository;
-
-
-    @Autowired
     PasswordEncoder encoder;
 
-    @Autowired
-    JwtUtils jwtUtils;
+    TokenService tokenService;
+
+    RoleService roleService;
+
+    public AuthController (
+            AuthenticationManager authenticationManager,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            TokenService jwtTokenService,
+            RoleServiceImpl roleService
+    ){
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
+        this.encoder = passwordEncoder;
+        this.tokenService = jwtTokenService;
+        this.roleService = roleService;
+    }
 
     @PostMapping(value = "/signin", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        String jwt = tokenService.generateToken(authentication);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
@@ -85,14 +95,18 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
+        Set<Role> roles = roleService.AddRolesIfAdmin(
+                SecurityContextHolder.getContext().getAuthentication(), signUpRequest.getRole()
+        );
+
         // Create new user's account
-        User user = new User(signUpRequest.getUsername(),
+        User user = new User(
+                signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
+                encoder.encode(signUpRequest.getPassword()),
+                roles
+        );
 
-        Set<Role> roles = RoleUtil.adaptRoles(signUpRequest.getRole(), roleRepository);
-
-        user.setRoles(roles);
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
@@ -101,7 +115,7 @@ public class AuthController {
     @GetMapping(value = "/get-public-key")
     public ResponseEntity<?> getPublicKeys(){
         return ResponseEntity.ok(new TokenResponse(
-                Base64.getEncoder().encodeToString(jwtUtils.getPublicKey().getEncoded())
+                Base64.getEncoder().encodeToString(tokenService.getPublicKey().getEncoded())
         ));
     }
 
@@ -112,7 +126,7 @@ public class AuthController {
             return  ResponseEntity.badRequest().body("Error : id not found");
         }
 
-        Set<Role> roles = RoleUtil.adaptRoles(rolesStr.getRole(), roleRepository);
+        Set<Role> roles = roleService.adaptRoles(rolesStr.getRole());
         User user = userRepository.findById(Long.parseLong(userId))
                 .orElseThrow();
         user.setRoles(roles);

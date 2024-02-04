@@ -15,6 +15,8 @@
     <description>Authenticator</description>
     <properties>
         <java.version>17</java.version>
+
+        <jsonwebtoken.version>0.12.5</jsonwebtoken.version>
     </properties>
     <dependencies>
         <dependency>
@@ -34,18 +36,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.3</version>
+            <version>${jsonwebtoken.version}</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.12.3</version>
+            <version>${jsonwebtoken.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.3</version>
+            <version>${jsonwebtoken.version}</version>
             <scope>runtime</scope>
         </dependency>
 
