@@ -6,7 +6,6 @@ import fr.efrei.authenticator.repository.RoleRepository;
 import fr.efrei.authenticator.security.user.UserDetailsImpl;
 import fr.efrei.authenticator.service.RoleService;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -48,7 +47,7 @@ public class RoleServiceImpl implements RoleService {
 
                         break;
                     case "loc":
-                        Role locRole = this.roleRepository.findByName(ERole.ROLE_PROFESSOR)
+                        Role locRole = this.roleRepository.findByName(ERole.ROLE_TUTOR)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(locRole);
 

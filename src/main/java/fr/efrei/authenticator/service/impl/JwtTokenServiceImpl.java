@@ -11,6 +11,7 @@ import io.jsonwebtoken.*;
 import java.security.Key;
 import java.security.KeyPair;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtTokenServiceImpl implements TokenService {
@@ -27,11 +28,13 @@ public class JwtTokenServiceImpl implements TokenService {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
+        List<String> authorities = userPrincipal.getAuthorities().stream().map(Object::toString).toList();
+
         return Jwts.builder()
                 .subject((userPrincipal.getUsername()))
-                .claim("userId", userPrincipal.getId())
+                .claim("id", userPrincipal.getId())
                 .claim("email", userPrincipal.getEmail())
-                .claim("roles", userPrincipal.getAuthorities())
+                .claim("roles", authorities)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(keyPair.getPrivate())
